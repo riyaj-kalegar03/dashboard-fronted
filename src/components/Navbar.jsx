@@ -36,7 +36,7 @@ export default function Navbar() {
       setLoading(true)
       setHasError(false)
       try {
-        const response = await api.get('/call-center-fintech/fintechs')
+        const response = await api.get('/dashboard/fintechs')
         const list = Array.isArray(response.data) ? response.data : []
         setFintechs(list)
 
@@ -83,6 +83,7 @@ export default function Navbar() {
     localStorage.setItem('selectedFintechId', fintech.fintechId)
     localStorage.setItem('selectedFintechName', fintech.fintechName)
     setFintechOpen(false)
+    window.dispatchEvent(new Event('fintechChanged'))
   }
 
   const logout = () => {

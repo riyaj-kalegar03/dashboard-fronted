@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import CustomerPlaceholder from './pages/CustomerPlaceholder'
 import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
@@ -13,6 +14,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customer/:customerId"
+        element={
+          <ProtectedRoute>
+            <CustomerPlaceholder />
           </ProtectedRoute>
         }
       />
