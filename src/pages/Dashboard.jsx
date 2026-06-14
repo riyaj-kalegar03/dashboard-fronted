@@ -6,6 +6,7 @@ import Sidebar from '../components/Sidebar'
 import UploadDumpModal from '../components/UploadDumpModal'
 import ExportRemarksModal from '../components/ExportRemarksModal'
 import ManageAgentsModal from '../components/ManageAgentsModal'
+import ManageCustomersModal from '../components/ManageCustomersModal'
 import ConfirmModal from '../components/ConfirmModal'
 import { AuthContext } from '../context/AuthContext'
 import api from '../services/api'
@@ -134,9 +135,15 @@ export default function Dashboard() {
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return
+    const customerId = deleteTarget.id || deleteTarget.customerId
+    if (!customerId) {
+      toast.error('Unable to determine customer ID for deletion.')
+      setDeleteTarget(null)
+      return
+    }
     setIsDeleting(true)
     try {
-      await api.delete(`/customers/${deleteTarget.customerId}`)
+      await api.delete(`/customers/${customerId}`)
       toast.success('Customer deleted successfully.')
       setDeleteTarget(null)
       loadCustomers(currentPage, activeSearch)
@@ -149,7 +156,7 @@ export default function Dashboard() {
   }
 
   const handleMenuItemClick = (action) => {
-    if (action === 'upload' || action === 'export' || action === 'manage') {
+    if (action === 'upload' || action === 'export' || action === 'manage' || action === 'manageCustomers') {
       setActiveModal(activeModal === action ? null : action)
       return
     }
@@ -174,7 +181,7 @@ export default function Dashboard() {
     <div className="dashboard-page">
       <Navbar />
       <div className="dashboard-container">
-        {isAdmin && <Sidebar onMenuItemClick={handleMenuItemClick} activeItem={activeSidebarItem} />}
+        {isAdmin && <Sidebar onMenuItemClick={handleMenuItemClick} activeItem={activeSidebarItem} isAdmin={isAdmin} />}
 
         <main className={`dashboard-main ${isAdmin ? 'with-sidebar' : 'full-width'}`}>
           <div className="customer-page-header card">
@@ -231,12 +238,12 @@ export default function Dashboard() {
                         <th>Customer Name</th>
                         <th>Phone</th>
                         <th>Loan Number</th>
-                        {isAdmin && <th>Delete</th>}
+                        {/* {isAdmin && <th>Delete</th>} */}
                       </tr>
                     </thead>
                     <tbody>
                       {customers.map((customer) => (
-                        <tr key={customer.customerId}>
+                        <tr key={customer.customerId || customer.id}>
                           <td>{customer.customerName || '-'}</td>
                           <td>
                             {customer.phone ? (
@@ -252,7 +259,7 @@ export default function Dashboard() {
                               <button
                                 type="button"
                                 className="loan-link"
-                                onClick={() => navigate(`/customer/${customer.customerId}`)}
+                                onClick={() => navigate(`/customer/${customer.id || customer.customerId}`)}
                               >
                                 {customer.loanNumber}
                               </button>
@@ -260,13 +267,13 @@ export default function Dashboard() {
                               '-'
                             )}
                           </td>
-                          {isAdmin && (
+                          {/* {isAdmin && (
                             <td className="action-cell">
                               <button className="btn-danger-outline" onClick={() => handleDeleteClick(customer)}>
                                 Delete
                               </button>
                             </td>
-                          )}
+                          )} */}
                         </tr>
                       ))}
                     </tbody>
@@ -311,6 +318,17 @@ export default function Dashboard() {
       <UploadDumpModal isOpen={activeModal === 'upload'} onClose={() => setActiveModal(null)} />
       <ExportRemarksModal isOpen={activeModal === 'export'} onClose={() => setActiveModal(null)} />
       <ManageAgentsModal isOpen={activeModal === 'manage'} onClose={() => setActiveModal(null)} />
+      <ManageCustomersModal
+        isOpen={activeModal === 'manageCustomers'}
+        fintechId={selectedFintechId}
+        fintechName={selectedFintechName}
+        onClose={(refresh) => {
+          setActiveModal(null)
+          if (refresh) {
+            loadCustomers(currentPage, activeSearch)
+          }
+        }}
+      />
 
       <ConfirmModal
         isOpen={!!deleteTarget}

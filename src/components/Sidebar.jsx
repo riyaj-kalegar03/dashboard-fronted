@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
-import { Menu, LayoutDashboard, Users, Upload, FileText, Settings, ChevronRight } from 'lucide-react'
+import { Menu, LayoutDashboard, Users, Upload, FileText, Settings, Search, ChevronRight } from 'lucide-react'
 
-export default function Sidebar({ onMenuItemClick, activeItem }) {
+export default function Sidebar({ onMenuItemClick, activeItem, isAdmin }) {
   const [isExpanded, setIsExpanded] = useState(true)
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, action: 'dashboard' },
     { id: 'customers', label: 'Customers', icon: Users, action: 'customers' },
+    isAdmin && { id: 'manageCustomers', label: 'Manage Customers', icon: Search, action: 'manageCustomers' },
     { id: 'upload', label: 'Upload Dump', icon: Upload, action: 'upload' },
     { id: 'export', label: 'Export Remarks', icon: FileText, action: 'export' },
     { id: 'manage', label: 'Manage Agents', icon: Settings, action: 'manage' },
-  ]
+  ].filter(Boolean)
 
   const handleMenuClick = (action) => {
     onMenuItemClick(action)
