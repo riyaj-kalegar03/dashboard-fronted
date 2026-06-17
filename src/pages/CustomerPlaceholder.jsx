@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast'
 import { ChevronLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { AuthContext } from '../context/AuthContext'
+import FloatingActionSidebar from '../components/FloatingActionSidebar'
+import ErrorBoundary from '../components/ErrorBoundary'
 import api from '../services/api'
 
 export default function CustomerPlaceholder() {
@@ -65,35 +67,26 @@ export default function CustomerPlaceholder() {
     fetchCustomerDetails()
   }, [customerId, selectedFintechId])
 
-  useEffect(() => {
-    const fetchRemarks = async () => {
-      if (!customerId) {
-        console.error('Customer ID missing - cannot fetch remarks')
-        return
-      }
-
-      setLoadingRemarks(true)
-      try {
-        console.log(`Fetching remarks: /remarks/customer/${customerId}?page=${currentPage}&size=${pageSize}`)
-        const response = await api.get(`/remarks/customer/${customerId}`, {
-          params: { page: currentPage, size: pageSize },
-        })
-        setRemarks(response.data.remarks || [])
-        setCurrentPage(response.data.currentPage || 0)
-        setTotalPages(response.data.totalPages || 0)
-        setTotalItems(response.data.totalItems || 0)
-        setErrorRemarks('')
-      } catch (err) {
-        const message = err.response?.data?.message || err.response?.data || err.message || 'Failed to load remarks'
-        console.error('Remarks fetch error:', message)
-        setErrorRemarks(message)
-      } finally {
-        setLoadingRemarks(false)
-      }
+  const fetchRemarks = async (page = 0, size = pageSize) => {
+    if (!customerId) return
+    setLoadingRemarks(true)
+    try {
+      const response = await api.get(`/remarks/customer/${customerId}`, { params: { page, size } })
+      setRemarks(response.data.remarks || [])
+      setCurrentPage(response.data.currentPage || page)
+      setTotalPages(response.data.totalPages || 0)
+      setTotalItems(response.data.totalItems || 0)
+      setErrorRemarks('')
+    } catch (err) {
+      const message = err.response?.data?.message || err.response?.data || err.message || 'Failed to load remarks'
+      console.error('Remarks fetch error:', message)
+      setErrorRemarks(message)
+    } finally {
+      setLoadingRemarks(false)
     }
+  }
 
-    fetchRemarks()
-  }, [customerId, currentPage, pageSize])
+  useEffect(() => { fetchRemarks(currentPage, pageSize) }, [customerId, currentPage, pageSize])
 
   const formatDate = (dateString) => {
     if (!dateString) return '-'
@@ -122,6 +115,7 @@ export default function CustomerPlaceholder() {
   return (
     <div className="customer-detail-page">
       <Navbar />
+      <ErrorBoundary>
       <main className="customer-detail-container">
         {/* Back Button */}
         <button
@@ -286,7 +280,16 @@ export default function CustomerPlaceholder() {
             </>
           )}
         </div>
+
+        {/* Floating action sidebar (only on this page) */}
+        <FloatingActionSidebar
+          customerId={customerId}
+          customerDetails={customerDetails}
+          refreshRemarks={() => fetchRemarks(0, pageSize)}
+          canAddRemark={auth?.role === 'CALL_CENTER_ADMIN' || auth?.role === 'AGENT'}
+        />
       </main>
+      </ErrorBoundary>
     </div>
   )
 }
